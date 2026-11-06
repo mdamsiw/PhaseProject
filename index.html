@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+
+<html lang="ru">
+
+<head>
+
+<meta charset="utf-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="theme-color" content="#12142B">
+
+<title>Фаза — режим сна и план его восстановления</title>
+
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'%3E%3Crect width='28' height='28' rx='8' fill='%2312142B'/%3E%3Cpath d='M18 6.5A8.5 8.5 0 1 0 18 21.5 7 7 0 0 1 18 6.5Z' fill='%238B8FF0'/%3E%3C/svg%3E">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+<style>
+
+:root{
+
+  --bg:#12142B; --deep:#0C0E20; --card:#1C1F45; --line:#2C305E;
+
+  --accent:#8B8FF0; --amber:#F2B66D; --text:#F1F1FA; --muted:#B4B7D6;
+
+}
+
+*{box-sizing:border-box}
+
+html{-webkit-text-size-adjust:100%}
+
+body{margin:0;background:var(--bg);color:var(--text);font-family:Manrope,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;line-height:1.5;min-height:100vh}
+
+h1,h2,h3,p,ul{margin:0}
+
+button,input{font:inherit;color:inherit}
+
+:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+
+.page{max-width:1080px;margin:0 auto;padding:20px 16px 32px;display:grid;gap:22px}
+
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:22px;letter-spacing:.3px}
+
+.side-text{display:none}
+
+.side h1{font-size:clamp(30px,3.6vw,44px);line-height:1.12;font-weight:800;margin:36px 0 18px}
+
+.side p{color:var(--muted);max-width:44ch;font-size:17px}
+
+.side .note{margin-top:28px;font-size:14px;border-left:3px solid var(--amber);padding-left:14px}
+
+
+
+.app{background:var(--bg);border-radius:28px;display:flex;flex-direction:column;gap:18px;min-height:540px}
+
+.screen{display:none;flex-direction:column;gap:18px;flex:1}
+
+.screen.on{display:flex}
+
+.app h2{font-size:26px;line-height:1.2;font-weight:800}
+
+.lead{color:var(--muted);font-size:15px}
+
+.card{background:var(--card);border-radius:18px;padding:16px}
+
+
+
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+
+.chip{border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:14px;color:var(--muted)}
+
+
+
+.btn{min-height:52px;border-radius:14px;border:0;font-weight:700;font-size:16px;cursor:pointer;padding:0 20px;transition:transform .12s,filter .12s}
+
+.btn:active{transform:scale(.98)}
+
+.primary{background:var(--accent);color:#12142B}
+
+.primary:hover{filter:brightness(1.08)}
+
+.ghost{background:transparent;color:var(--muted);min-height:44px}
+
+.ghost:hover{color:var(--text)}
+
+.actions{margin-top:auto;display:flex;flex-direction:column;gap:6px}
+
+
+
+.prog{display:flex;align-items:center;gap:12px;font-size:13px;color:var(--muted)}
+
+.bar{flex:1;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+
+.bar i{display:block;height:100%;width:0;background:var(--accent);border-radius:3px;transition:width .3s}
+
+
+
+fieldset{border:0;margin:0;padding:0;min-width:0;display:block}
+
+legend{display:block;width:100%;font-weight:700;margin:0 0 8px;padding:0}
+
+fieldset+fieldset{margin-top:6px}
+
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+.pair label{display:grid;gap:6px;font-size:13px;color:var(--muted)}
+
+input[type=time]{width:100%;min-height:52px;border-radius:12px;border:1px solid var(--line);background:var(--bg);padding:0 12px;font-size:18px;font-weight:700;color-scheme:dark}
+
+input[type=time]:focus{border-color:var(--accent)}
+
+
+
+.opts{display:grid;gap:10px}
+
+.opt{width:100%;text-align:left;padding:14px 16px;min-height:56px;border-radius:14px;border:1px solid var(--line);background:var(--card);cursor:pointer;transition:border-color .15s}
+
+.opt:hover{border-color:var(--accent)}
+
+.opt[aria-pressed=true]{border-color:var(--amber)}
+
+.qtitle{font-size:22px!important}
+
+
+
+.score{display:flex;align-items:center;gap:18px}
+
+.ring{position:relative;width:128px;height:128px;flex:none}
+
+.ring svg{width:100%;height:100%}
+
+.ring .arc{transition:stroke-dashoffset 1.1s cubic-bezier(.2,.7,.2,1)}
+
+.ring .num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+
+.ring b{font-size:38px;line-height:1;font-weight:800}
+
+.ring span{font-size:12px;color:var(--muted)}
+
+.metrics{flex:1;display:grid;gap:12px;min-width:0}
+
+.m{display:grid;gap:5px;font-size:13px}
+
+.m div:first-child{display:flex;justify-content:space-between;gap:8px}
+
+.m .bar i{transition:width 1s .2s}
+
+.verdict{font-weight:700;font-size:18px}
+
+.facts{font-size:13px;color:var(--muted)}
+
+
+
+.recs{display:grid;gap:10px;padding:0;list-style:none}
+
+.rec{display:flex;gap:14px;align-items:flex-start;background:var(--card);border-radius:16px;padding:14px 16px;border:1px solid transparent}
+
+.rec:first-child{border-color:var(--amber)}
+
+.rec .n{flex:none;width:28px;height:28px;border-radius:50%;background:var(--line);display:grid;place-items:center;font-weight:800;font-size:14px}
+
+.rec:first-child .n{background:var(--amber);color:#12142B}
+
+.rec b{display:block;font-size:15px}
+
+.rec span{font-size:13px;color:var(--muted)}
+
+.small{font-size:12px;color:var(--muted)}
+
+
+
+/* чек-лист */
+
+.pcard{position:sticky;top:0;z-index:5;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;display:grid;gap:10px;box-shadow:0 10px 24px rgba(12,14,32,.6)}
+
+.ptop{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+
+.pcount{font-size:13px;color:var(--muted)}
+
+.ppct{font-size:30px;font-weight:800;line-height:1;color:var(--amber)}
+
+.pbar{height:10px;border-radius:5px;background:var(--line);overflow:hidden}
+
+.pbar i{display:block;height:100%;width:0;border-radius:5px;background:linear-gradient(90deg,var(--accent),var(--amber));transition:width .45s cubic-bezier(.2,.7,.2,1)}
+
+.pmsg{font-size:14px;font-weight:700;min-height:42px}
+
+.group{display:grid;gap:8px}
+
+.group h3{font-size:17px;font-weight:800;margin:8px 0 2px;display:flex;justify-content:space-between;align-items:baseline}
+
+.group h3 small{font-size:12px;font-weight:500;color:var(--muted)}
+
+.chk{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:14px;background:var(--card);border:1px solid transparent;cursor:pointer;transition:border-color .15s}
+
+.chk:hover{border-color:var(--line)}
+
+.chk input{appearance:none;-webkit-appearance:none;flex:none;width:22px;height:22px;margin:1px 0 0;border:2px solid var(--accent);border-radius:7px;background:transparent;cursor:pointer;display:grid;place-items:center}
+
+.chk input:checked{background:var(--accent)}
+
+.chk input:checked::after{content:"";width:5px;height:10px;border:solid #12142B;border-width:0 2.5px 2.5px 0;transform:rotate(45deg) translate(-1px,-1px)}
+
+.chk .t{display:block;font-weight:700;font-size:15px}
+
+.chk .h{display:block;font-size:13px;color:var(--muted);margin-top:2px}
+
+.chk:has(input:checked){border-color:var(--accent)}
+
+.chk:has(input:checked) .t{color:var(--muted)}
+
+
+
+@media (max-width:600px){
+
+  #qbody{gap:12px!important}
+
+  .pair{gap:8px}
+
+  .pair label{gap:4px}
+
+  input[type=time]{min-height:48px}
+
+}
+
+@media (max-width:380px){.score{flex-direction:column;align-items:stretch}.ring{margin:0 auto}}
+
+@media (min-width:900px){
+
+  body{background:var(--deep)}
+
+  .page{grid-template-columns:1fr minmax(400px,480px);gap:72px;align-items:center;min-height:100vh;padding:48px 32px}
+
+  .side-text{display:block}
+
+  .side{position:sticky;top:48px}
+
+  .app{padding:32px;border:1px solid var(--line);border-radius:32px;box-shadow:0 30px 80px rgba(0,0,0,.35)}
+
+  .pcard{top:12px}
+
+}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="page">
+
+
+
+<aside class="side">
+
+  <div class="logo">
+
+    <svg width="30" height="30" viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="13" fill="none" stroke="#8B8FF0" stroke-width="2"/><path d="M19 6.5A9 9 0 1 0 19 21.5 7.5 7.5 0 0 1 19 6.5Z" fill="#8B8FF0"/></svg>
+
+    Фаза
+
+  </div>
+
+  <div class="side-text">
+
+    <h1>Подробнее о вашем режиме сна и план его восстановления</h1>
+
+    <p>Ответьте на десять вопросов о вашем режиме, и «Фаза» покажет, какие факторы влияют на качество сна, и предложит шаги по их улучшению в порядке приоритета.</p>
+
+    <p class="note">«Фаза» не ставит диагнозы и не заменяет консультацию врача. При стойких нарушениях сна обратитесь к специалисту.</p>
+
+  </div>
+
+</aside>
+
+
+
+<main class="app" id="app">
+
+
+
+  <section class="screen on" id="s-start" aria-labelledby="t-start">
+
+    <h2 id="t-start" tabindex="-1">Оценка режима сна</h2>
+
+    <p class="lead">10 вопросов, около трёх минут. По итогам вы получите оценку от 0 до 100 и персональный план улучшений, расставленный по приоритету.</p>
+
+    <div class="chips" aria-label="Что оценивается">
+
+      <span class="chip">Длительность сна</span>
+
+      <span class="chip">Регулярность</span>
+
+      <span class="chip">Привычки и условия</span>
+
+      <span class="chip">Качество сна</span>
+
+    </div>
+
+    <div class="actions">
+
+      <button class="btn primary" id="go">Начать оценку</button>
+
+      <button class="btn ghost" data-open="check">Открыть чек-лист из брошюры</button>
+
+    </div>
+
+  </section>
+
+
+
+  <section class="screen" id="s-q" aria-live="polite">
+
+    <div class="prog"><span id="pt"></span><div class="bar"><i id="pb"></i></div></div>
+
+    <div id="qbody" style="display:flex;flex-direction:column;gap:18px;flex:1"></div>
+
+  </section>
+
+
+
+  <section class="screen" id="s-res" aria-labelledby="t-res">
+
+    <div>
+
+      <h2 id="t-res" tabindex="-1">Ваш результат</h2>
+
+      <p class="lead">По итогам оценки режима сна</p>
+
+    </div>
+
+    <div class="card">
+
+      <div class="score">
+
+        <div class="ring" role="img" id="ringlbl">
+
+          <svg viewBox="0 0 140 140" aria-hidden="true">
+
+            <circle cx="70" cy="70" r="60" fill="none" stroke="#2C305E" stroke-width="12"/>
+
+            <circle class="arc" id="arc" cx="70" cy="70" r="60" fill="none" stroke="#8B8FF0" stroke-width="12" stroke-linecap="round" stroke-dasharray="376.99" stroke-dashoffset="376.99" transform="rotate(-90 70 70)"/>
+
+          </svg>
+
+          <div class="num"><b id="tot">0</b><span>из 100</span></div>
+
+        </div>
+
+        <div class="metrics" id="metrics"></div>
+
+      </div>
+
+    </div>
+
+    <p class="verdict" id="verdict"></p>
+
+    <p class="facts" id="facts"></p>
+
+    <h2 style="font-size:20px;margin-top:4px">План восстановления</h2>
+
+    <ol class="recs" id="recs"></ol>
+
+    <p class="small">Это рекомендации по режиму и гигиене сна, а не медицинское заключение. Ориентир для взрослых 18–64 лет: 7–9 часов сна (по рекомендациям Роспотребнадзора).</p>
+
+    <div class="actions">
+
+      <button class="btn primary" id="again">Пройти оценку заново</button>
+
+      <button class="btn ghost" data-open="check">Открыть чек-лист из брошюры</button>
+
+    </div>
+
+  </section>
+
+
+
+  <section class="screen" id="s-check" aria-labelledby="t-check">
+
+    <div>
+
+      <h2 id="t-check" tabindex="-1">Чек-лист здорового сна</h2>
+
+      <p class="lead">Отметьте привычки, которые вы уже соблюдаете. Шкала покажет, насколько ваш распорядок дня соответствует рекомендациям.</p>
+
+    </div>
+
+    <div class="pcard">
+
+      <div class="ptop">
+
+        <span class="pcount" id="pcount"></span>
+
+        <span class="ppct" id="ppct">0%</span>
+
+      </div>
+
+      <div class="pbar" role="progressbar" id="pbar2" aria-label="Выполнение чек-листа" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="pfill"></i></div>
+
+      <p class="pmsg" id="pmsg" aria-live="polite"></p>
+
+    </div>
+
+    <div id="checks"></div>
+
+    <div class="actions"><button class="btn ghost" id="back-check">Назад</button></div>
+
+  </section>
+
+
+
+</main>
+
+</div>
+
+
+
+<script>
+
+/* ---------- расчёт (без DOM) ---------- */
+
+/* g: группа показателя. eve — привычки и условия, qual — качество сна и самочувствие */
+
+var Q = [
+
+  {id:'lat', g:'qual', t:'Как долго вы обычно засыпаете после того, как легли в постель?', o:[['Менее 15 минут',100],['От 15 до 30 минут',80],['От 30 до 60 минут',50],['Более одного часа',20]]},
+
+  {id:'awk', g:'qual', t:'Как часто вы просыпаетесь ночью и с трудом засыпаете снова?', o:[['Никогда или крайне редко',100],['1–2 раза в неделю',70],['3–4 раза в неделю',40],['Практически каждую ночь',15]]},
+
+  {id:'day', g:'qual', t:'Как вы оцениваете своё самочувствие и уровень бодрости в течение дня?', o:[['Чувствую себя бодрым, сонливости нет',100],['Периодически возникает сонливость',60],['Практически ежедневно ощущаю усталость и разбитость',20]]},
+
+  {id:'str', g:'qual', t:'Как часто тревожные мысли или напряжение затрудняют засыпание?', o:[['Практически никогда',100],['Иногда',65],['Часто',35],['Почти каждый вечер',15]]},
+
+  {id:'scr', g:'eve', t:'Как долго вы пользуетесь электронными устройствами перед сном?', o:[['Прекращаю за час и более до сна',100],['Прекращаю за 15–60 минут до сна',55],['Пользуюсь практически до момента засыпания',10]]},
+
+  {id:'caf', g:'eve', t:'Как часто вы употребляете кофеиносодержащие напитки во второй половине дня?', o:[['Практически не употребляю',100],['Иногда',60],['Практически ежедневно',20]]},
+
+  {id:'eat', g:'eve', t:'Как часто вы употребляете алкоголь или плотно ужинаете менее чем за 2–3 часа до сна?', o:[['Практически никогда',100],['Иногда',60],['Часто',30],['Практически ежедневно',15]]},
+
+  {id:'env', g:'eve', t:'Как вы оцениваете условия для сна в вашей спальне (темнота, тишина, температура)?', o:[['Полностью комфортные',100],['В основном комфортные',70],['Есть отдельные помехи',40],['Условия существенно мешают сну',15]]},
+
+  {id:'nap', g:'eve', t:'Как часто и как долго вы спите в дневное время?', o:[['Не сплю днём',100],['Не более 30 минут',90],['От 30 до 90 минут',55],['Более полутора часов',20]]}
+
+];
+
+var TIMES = {bw:'23:30', ww:'07:30', be:'01:00', we:'10:30'};
+
+
+
+function toMin(s){var p=s.split(':');return (+p[0])*60+(+p[1]);}
+
+function clamp(x,a,b){return Math.max(a,Math.min(b,x));}
+
+function circ(a,b){var d=Math.abs(a-b)%1440;return Math.min(d,1440-d);}
+
+function dur(bed,wake){return (wake-bed+1440)%1440;}
+
+function fmt(m){var h=Math.floor(m/60),r=Math.round(m%60);return h+' ч'+(r?' '+r+' мин':'');}
+
+function avg(a,ids){var s=0;ids.forEach(function(k){s+=a[k];});return s/ids.length;}
+
+function durScore(h){
+
+  if(h<=4) return 0;
+
+  if(h<7) return (h-4)/3*100;
+
+  if(h<=9) return 100;
+
+  if(h<10) return 100-(h-9)*30;
+
+  return 70;
+
+}
+
+
+
+function compute(t, a){
+
+  var bw=toMin(t.bw), ww=toMin(t.ww), be=toMin(t.be), we=toMin(t.we);
+
+  var dw=dur(bw,ww), de=dur(be,we), h=dw/60;
+
+  var wakeShift=circ(ww,we), bedShift=circ(bw,be);
+
+  var shift=(wakeShift+bedShift)/2;
+
+  var sDur=Math.round(durScore(h));
+
+  var sReg=Math.round(shift<=30?100:clamp(100-(shift-30)/150*100,0,100));
+
+  var sEve=Math.round(avg(a,['scr','caf','eat','env','nap']));
+
+  var sQual=Math.round(avg(a,['lat','awk','day','str']));
+
+  var total=Math.round(.3*sDur+.25*sReg+.25*sEve+.2*sQual);
+
+  var later=((we-ww)+1440)%1440; if(later>720) later-=1440; // на сколько позже встаёт в выходные
+
+
+
+  var r=[];
+
+  if(wakeShift>45) r.push({p:30+Math.min(wakeShift,180)/180*40, t:'Вставайте в одно и то же время', d:'Время подъёма в будни и в выходные различается примерно на '+Math.round(wakeShift)+' мин. Сократите разницу до одного часа: это ключевой шаг для вашего режима.'});
+
+  else if(bedShift>60) r.push({p:35, t:'Ложитесь в одно и то же время', d:'Время отхода ко сну в выходные заметно отличается от будней. Старайтесь, чтобы разница не превышала одного часа.'});
+
+  if(later>=60) r.push({p:40, t:'Не пересыпайте в выходные', d:'Сдвигайте подъём в выходные не более чем на час, иначе в понедельник режим собьётся снова.'});
+
+  if(h<7) r.push({p:Math.min(95,40+(7-h)*25), t:'Увеличьте продолжительность сна', d:'Сейчас вы спите около '+fmt(dw)+' в будни. Ориентир — 7–9 часов. Ложитесь на 30 минут раньше и придерживайтесь этого в течение недели.'});
+
+  if(a.scr<100) r.push({p:20+(100-a.scr)/100*60, t:'Исключите экраны за час до сна', d:'Свет экрана откладывает засыпание и сбивает биологические часы. Замените гаджеты чтением или спокойным занятием.'});
+
+  if(a.caf<100) r.push({p:15+(100-a.caf)/100*50, t:'Ограничьте кофеин второй половиной дня', d:'Кофеин может сокращать сон, даже если был выпит за несколько часов до отхода ко сну. Оставьте его на первую половину дня.'});
+
+  if(a.lat<=50) r.push({p:20+(100-a.lat)/100*40, t:'Не оставайтесь в постели без сна', d:'Если вы не заснули в течение 20 минут, встаньте, займитесь спокойным делом вне кровати и вернитесь, когда появится сонливость.'});
+
+  if(a.awk<=40) r.push({p:45, t:'Обратите внимание на ночные пробуждения', d:'Частые пробуждения могут быть связаны с условиями сна, стрессом или состоянием здоровья. Если они повторяются больше месяца, обратитесь к врачу.'});
+
+  if(a.str<=65) r.push({p:15+(100-a.str)/100*40, t:'Введите вечерний ритуал расслабления', d:'За 30 минут до сна займитесь спокойным делом: чтением, тёплым душем, дыхательными упражнениями. Тревожные мысли можно записать на бумаге.'});
+
+  if(a.eat<=60) r.push({p:15+(100-a.eat)/100*40, t:'Перенесите ужин и исключите алкоголь вечером', d:'Ужинайте за 2–3 часа до сна. Алкоголь ускоряет засыпание, но ухудшает качество сна во второй половине ночи.'});
+
+  if(a.env<=70) r.push({p:15+(100-a.env)/100*45, t:'Подготовьте спальню ко сну', d:'Обеспечьте темноту, тишину и температуру около 18–21 °C. При необходимости используйте плотные шторы или беруши.'});
+
+  if(a.nap<=55) r.push({p:22, t:'Сократите дневной сон', d:'Ограничьте его 20–30 минутами и не спите после 15:00, чтобы не нарушать вечернее засыпание.'});
+
+  if(a.day<=60) r.push({p:a.day<=20?36:26, t:'Больше времени проводите на дневном свету', d:'Утренний свет и прогулки помогают настроить биологические часы и повышают дневную бодрость.'});
+
+  var fill=[
+
+    {p:10,t:'Поддерживайте комфортную температуру',d:'Прохлада в спальне (около 18–21 °C) способствует более глубокому сну.'},
+
+    {p:9,t:'Не ужинайте поздно',d:'Плотный приём пищи за 2–3 часа до сна затрудняет засыпание.'},
+
+    {p:8,t:'Сохраняйте текущий режим',d:'Он находится в хорошем состоянии. Повторите оценку через месяц, чтобы убедиться, что результат сохраняется.'}
+
+  ];
+
+  r.sort(function(x,y){return y.p-x.p;});
+
+  for(var i=0;r.length<3&&i<fill.length;i++) r.push(fill[i]);
+
+  r=r.slice(0,5);
+
+
+
+  var verdict = total>=80?'Хорошее восстановление':total>=60?'Среднее восстановление':total>=40?'Восстановление ниже среднего':'Режим требует перестройки';
+
+  if(a.day<=20 && total>=60) verdict+=', однако днём вы испытываете усталость';
+
+  return {total:total, sDur:sDur, sReg:sReg, sEve:sEve, sQual:sQual, dw:dw, de:de, recs:r, verdict:verdict};
+
+}
+
+
+
+/* ---------- DOM ---------- */
+
+if (typeof document !== 'undefined') (function(){
+
+  var $=function(id){return document.getElementById(id);};
+
+  var step=0, ans={}, times=Object.assign({},TIMES);
+
+  var STEPS=1+Q.length;
+
+
+
+  function show(id){
+
+    var list=document.querySelectorAll('.screen');
+
+    for(var i=0;i<list.length;i++) list[i].classList.toggle('on', list[i].id===id);
+
+    var h=document.querySelector('#'+id+' h2'); if(h) h.focus({preventScroll:true});
+
+    window.scrollTo(0,0);
+
+  }
+
+
+
+  function renderStep(){
+
+    show('s-q');
+
+    $('pt').textContent='Вопрос '+(step+1)+' из '+STEPS;
+
+    $('pb').style.width=((step+1)/STEPS*100)+'%';
+
+    var b=$('qbody'); b.innerHTML='';
+
+    var back=document.createElement('button');
+
+    back.className='btn ghost'; back.textContent='Назад';
+
+    back.onclick=function(){ if(step===0) show('s-start'); else {step--;renderStep();} };
+
+
+
+    if(step===0){
+
+      b.innerHTML=
+
+        '<h2 class="qtitle" tabindex="-1">В какое время вы обычно ложитесь спать и просыпаетесь?</h2>'+
+
+        '<p class="lead">Укажите примерное время, характерное для обычной недели.</p>'+
+
+        '<fieldset><legend>В будние дни</legend><div class="pair">'+
+
+        '<label>Отход ко сну<input type="time" id="bw" value="'+times.bw+'"></label>'+
+
+        '<label>Подъём<input type="time" id="ww" value="'+times.ww+'"></label></div></fieldset>'+
+
+        '<fieldset><legend>В выходные дни</legend><div class="pair">'+
+
+        '<label>Отход ко сну<input type="time" id="be" value="'+times.be+'"></label>'+
+
+        '<label>Подъём<input type="time" id="we" value="'+times.we+'"></label></div></fieldset>';
+
+      var act=document.createElement('div'); act.className='actions';
+
+      var next=document.createElement('button'); next.className='btn primary'; next.textContent='Далее';
+
+      next.onclick=function(){
+
+        ['bw','ww','be','we'].forEach(function(k){var v=$(k).value; if(v) times[k]=v;});
+
+        step++; renderStep();
+
+      };
+
+      act.appendChild(next); act.appendChild(back); b.appendChild(act);
+
+    } else {
+
+      var q=Q[step-1];
+
+      var h=document.createElement('h2'); h.className='qtitle'; h.tabIndex=-1; h.textContent=q.t; b.appendChild(h);
+
+      var wrap=document.createElement('div'); wrap.className='opts';
+
+      q.o.forEach(function(o){
+
+        var btn=document.createElement('button');
+
+        btn.className='opt'; btn.textContent=o[0];
+
+        btn.setAttribute('aria-pressed', ans[q.id]===o[1]?'true':'false');
+
+        btn.onclick=function(){
+
+          ans[q.id]=o[1];
+
+          btn.setAttribute('aria-pressed','true');
+
+          setTimeout(function(){ if(step<STEPS-1){step++;renderStep();} else finish(); },180);
+
+        };
+
+        wrap.appendChild(btn);
+
+      });
+
+      b.appendChild(wrap);
+
+      var act2=document.createElement('div'); act2.className='actions'; act2.appendChild(back); b.appendChild(act2);
+
+    }
+
+    var hh=b.querySelector('h2'); if(hh) hh.focus({preventScroll:true});
+
+  }
+
+
+
+  function finish(){
+
+    var r=compute(times,ans);
+
+    show('s-res');
+
+    $('verdict').textContent=r.verdict;
+
+    $('facts').textContent='Продолжительность сна в будни: '+fmt(r.dw)+'. В выходные: '+fmt(r.de)+'.';
+
+    $('ringlbl').setAttribute('aria-label','Оценка '+r.total+' из 100');
+
+
+
+    var items=[['Длительность сна',r.sDur],['Регулярность',r.sReg],['Привычки и условия',r.sEve],['Качество сна',r.sQual]];
+
+    var min=Math.min(r.sDur,r.sReg,r.sEve,r.sQual), html='';
+
+    items.forEach(function(it){
+
+      var weak=it[1]===min && min<80;
+
+      html+='<div class="m"><div><span>'+it[0]+'</span><span style="color:'+(weak?'#F2B66D':'#B4B7D6')+'">'+it[1]+'%</span></div>'+
+
+            '<div class="bar"><i data-w="'+it[1]+'" style="background:'+(weak?'#F2B66D':'#8B8FF0')+'"></i></div></div>';
+
+    });
+
+    $('metrics').innerHTML=html;
+
+
+
+    var rh='';
+
+    r.recs.forEach(function(x,i){ rh+='<li class="rec"><span class="n">'+(i+1)+'</span><div><b>'+x.t+'</b><span>'+x.d+'</span></div></li>'; });
+
+    $('recs').innerHTML=rh;
+
+
+
+    var arc=$('arc'), tot=$('tot'), C=376.99;
+
+    arc.style.strokeDashoffset=C; tot.textContent='0';
+
+    requestAnimationFrame(function(){requestAnimationFrame(function(){
+
+      arc.style.strokeDashoffset=C*(1-r.total/100);
+
+      var bars=document.querySelectorAll('#metrics .bar i');
+
+      for(var i=0;i<bars.length;i++) bars[i].style.width=bars[i].getAttribute('data-w')+'%';
+
+      var t0=null;
+
+      var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      if(reduce){tot.textContent=r.total;return;}
+
+      (function tick(ts){ if(!t0)t0=ts; var k=Math.min(1,(ts-t0)/1000); tot.textContent=Math.round(r.total*k); if(k<1)requestAnimationFrame(tick); })(performance.now());
+
+    });});
+
+  }
+
+
+
+  /* чек-лист: [заголовок группы, подсказка, [[действие, пояснение], ...]] */
+
+  var CHECK=[
+
+    ['Вечер','подготовка ко сну',[
+
+      ['Отказываться от кофе, энергетиков и других напитков с кофеином за 6–8 часов до сна'],
+
+      ['Заканчивать плотный приём пищи за 2–3 часа до сна'],
+
+      ['Откладывать телефон, выключать телевизор и компьютер за 30–60 минут до сна'],
+
+      ['Приглушать яркое освещение в комнате за 30 минут до сна'],
+
+      ['Проветривать спальню и поддерживать комфортную прохладную температуру'],
+
+      ['Избегать интенсивных физических нагрузок непосредственно перед сном']
+
+    ]],
+
+    ['Утро','правильное пробуждение',[
+
+      ['Вставать примерно в одно и то же время каждый день, включая выходные (допустимое отклонение — около 1 часа)'],
+
+      ['Выходить на улицу или получать дневной свет у окна в первые 30–60 минут после пробуждения'],
+
+      ['Не оставаться в постели после пробуждения и начинать обычную дневную активность'],
+
+      ['Не заменять полноценный ночной сон дополнительными дневными снами']
+
+    ]],
+
+    ['Выходные','сохраняем режим',[
+
+      ['Не сдвигать время пробуждения более чем на 1–2 часа относительно будней'],
+
+      ['Не пытаться компенсировать недосып всей недели одним очень долгим сном'],
+
+      ['Сохранять привычное время отхода ко сну'],
+
+      ['Не злоупотреблять кофеином и энергетиками во второй половине дня'],
+
+      ['При необходимости дневного сна ограничивать его 20–30 минутами и не спать поздно вечером']
+
+    ]]
+
+  ];
+
+  var MSG=[
+
+    [0,'Начните с одного пункта: даже небольшой шаг приближает вас к более качественному сну.'],
+
+    [25,'Хорошее начало! Первые шаги самые важные.'],
+
+    [50,'Вы на верном пути: полезные привычки начинают закрепляться.'],
+
+    [75,'Больше половины пути позади. Продолжайте в том же духе!'],
+
+    [100,'Почти готово! Осталось совсем немного до полного режима.'],
+
+    [101,'Отличный результат! Теперь главное — сохранять эти привычки каждый день.']
+
+  ];
+
+  function msgFor(p){
+
+    if(p===0) return MSG[0][1];
+
+    if(p<=25) return MSG[1][1];
+
+    if(p<=50) return MSG[2][1];
+
+    if(p<=75) return MSG[3][1];
+
+    if(p<100) return MSG[4][1];
+
+    return MSG[5][1];
+
+  }
+
+  var total=0; CHECK.forEach(function(g){total+=g[2].length;});
+
+  var ch=$('checks'), out='';
+
+  CHECK.forEach(function(g){
+
+    out+='<div class="group"><h3>'+g[0]+'<small>'+g[1]+'</small></h3>';
+
+    g[2].forEach(function(s){
+
+      out+='<label class="chk"><input type="checkbox"><span><span class="t">'+s[0]+'</span>'+(s[1]?'<span class="h">'+s[1]+'</span>':'')+'</span></label>';
+
+    });
+
+    out+='</div>';
+
+  });
+
+  ch.innerHTML=out;
+
+  function count(){
+
+    var n=ch.querySelectorAll('input:checked').length;
+
+    var p=Math.round(n/total*100);
+
+    $('pcount').textContent='Выполнено '+n+' из '+total;
+
+    $('ppct').textContent=p+'%';
+
+    $('pfill').style.width=p+'%';
+
+    $('pbar2').setAttribute('aria-valuenow',p);
+
+    $('pmsg').textContent=msgFor(p);
+
+  }
+
+  ch.addEventListener('change',count); count();
+
+
+
+  /* события */
+
+  var from='s-start';
+
+  $('go').onclick=function(){step=0;renderStep();};
+
+  $('again').onclick=function(){ans={};times=Object.assign({},TIMES);show('s-start');};
+
+  document.querySelectorAll('[data-open="check"]').forEach(function(b){
+
+    b.onclick=function(){ from=document.querySelector('.screen.on').id; show('s-check'); };
+
+  });
+
+  $('back-check').onclick=function(){show(from);};
+
+})();
+
+</script>
+
+</body>
+
+</html>
